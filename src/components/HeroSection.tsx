@@ -1,52 +1,218 @@
 import React from 'react';
-import { ArrowRight, BookOpen, Star, Heart, Lightbulb } from 'lucide-react';
+import { ArrowRight, BookOpen, Star, Heart, Lightbulb, Sparkles, Award, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import GradientCard from './ui/GradientCard';
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-yellow-50 min-h-screen flex items-center">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-200 rounded-full opacity-20"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 20, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full opacity-20"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            rotate: [360, 180, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity }}
+        />
+      </div>
+
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row min-h-[500px]">
-          {/* Left Section - Yellow */}
-          <div className="bg-yellow-400 flex-1 flex items-center justify-center p-8 lg:p-12">
-            <div className="max-w-lg">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-                The roots of education
-              </h2>
-              <p className="text-gray-800 text-sm lg:text-base mb-6 leading-relaxed">
-                Nuturing young minds with knowledge, creativity, and values to help them grow into
-                strong and confident futures.
-              </p>
-              <Link to="/apply-admission" className="group bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 transform hover:scale-105 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-center gap-12 px-4 sm:px-6 lg:px-8 py-12">
+          {/* Left Section - Content */}
+          <motion.div 
+            className="flex-1 text-center lg:text-left"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div
+              className="inline-flex items-center px-4 py-2 bg-yellow-100 rounded-full text-yellow-800 text-sm font-medium mb-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Excellence in Education Since 1999
+            </motion.div>
+            
+            <motion.h1 
+              className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">Roots</span> of Education
+            </motion.h1>
+            
+            <motion.p 
+              className="text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Nurturing young minds with knowledge, creativity, and values to help them grow into 
+              strong and confident leaders of tomorrow.
+            </motion.p>
+            
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link 
+                to="/apply-admission" 
+                className="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
                 <span>Apply for Admission</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </Link>
-            </div>
-          </div>
-
-          {/* Right Section - Blue */}
-          <div className="bg-gradient-to-br from-blue-400 to-blue-600 flex-1 flex items-center justify-center relative overflow-hidden p-8 lg:p-12">
-            {/* Student Image Area */}
-            <div className="relative z-10">
-              <div className="w-64 h-64 lg:w-80 lg:h-80 bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white border-opacity-20">
-                <div className="text-center">
-                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-900 rounded-full flex items-center justify-center">
-                      <span className="text-yellow-400 text-lg lg:text-xl font-bold">👩‍🎓</span>
-                    </div>
-                  </div>
-                  <div className="text-white">
-                    <p className="font-bold text-base lg:text-lg mb-1">Happy Student</p>
-                    <p className="text-blue-100 text-xs lg:text-sm">Ready to Learn</p>
-                  </div>
-                </div>
+              
+              <Link 
+                to="/about" 
+                className="group bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 border-2 border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl"
+              >
+                <span>Learn More</span>
+                <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+              </Link>
+            </motion.div>
+            
+            {/* Stats */}
+            <motion.div 
+              className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="text-center">
+                <div className="text-2xl lg:text-3xl font-bold text-blue-600">1800+</div>
+                <div className="text-sm text-gray-600">Students</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl lg:text-3xl font-bold text-yellow-600">81+</div>
+                <div className="text-sm text-gray-600">Teachers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl lg:text-3xl font-bold text-green-600">25+</div>
+                <div className="text-sm text-gray-600">Years</div>
               </div>
             </div>
+          </motion.div>
 
-            {/* Floating Decorative Elements */}
-            <div className="absolute top-12 left-8 lg:top-16 lg:left-12 animate-bounce">
-              <div className="bg-yellow-400 rounded-lg p-2 lg:p-3 transform rotate-12 shadow-lg">
-                <BookOpen className="w-4 h-4 lg:w-6 lg:h-6 text-gray-900" />
+          {/* Right Section - Visual */}
+          <motion.div 
+            className="flex-1 relative"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <div className="relative max-w-lg mx-auto">
+              {/* Main school image */}
+              <motion.div
+                className="relative z-10 rounded-3xl overflow-hidden shadow-2xl"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img 
+                  src="/assest/School.png" 
+                  alt="Shakti Shanti Academy" 
+                  className="w-full h-80 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 text-white">
+                  <h3 className="text-xl font-bold">Shakti Shanti Academy</h3>
+                  <p className="text-sm opacity-90">Excellence in Education</p>
+                </div>
+              </div>
+
+              {/* Floating cards */}
+              <motion.div
+                className="absolute -top-6 -left-6 z-20"
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                <GradientCard gradient="yellow" className="p-4">
+                  <div className="flex items-center space-x-2 text-white">
+                    <Award className="w-5 h-5" />
+                    <span className="text-sm font-semibold">CBSE Affiliated</span>
+                  </div>
+                </GradientCard>
+              </motion.div>
+              
+              <motion.div
+                className="absolute -bottom-6 -right-6 z-20"
+                animate={{ y: [10, -10, 10] }}
+                transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+              >
+                <GradientCard gradient="blue" className="p-4">
+                  <div className="flex items-center space-x-2 text-white">
+                    <Users className="w-5 h-5" />
+                    <span className="text-sm font-semibold">1800+ Students</span>
+                  </div>
+                </GradientCard>
+              </motion.div>
+              
+              {/* Decorative elements */}
+              <motion.div
+                className="absolute top-12 right-12 w-16 h-16 bg-yellow-200 rounded-full opacity-60"
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+                transition={{ duration: 8, repeat: Infinity }}
+              />
+              
+              <motion.div
+                className="absolute bottom-12 left-12 w-12 h-12 bg-blue-200 rounded-full opacity-60"
+                animate={{ scale: [1.2, 1, 1.2], rotate: [360, 180, 0] }}
+                transition={{ duration: 6, repeat: Infinity }}
+              />
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Features preview */}
+        <motion.div 
+          className="mt-16 px-4 sm:px-6 lg:px-8"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <GradientCard gradient="blue" className="p-6 text-white text-center">
+              <BookOpen className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Academic Excellence</h3>
+              <p className="text-sm opacity-90">CBSE curriculum with modern teaching methods</p>
+            </GradientCard>
+            
+            <GradientCard gradient="yellow" className="p-6 text-white text-center">
+              <Star className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">NEEV Program</h3>
+              <p className="text-sm opacity-90">Integrated foundation for competitive exams</p>
+            </GradientCard>
+            
+            <GradientCard gradient="purple" className="p-6 text-white text-center">
+              <Heart className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Holistic Development</h3>
+              <p className="text-sm opacity-90">Character building and value education</p>
+            </GradientCard>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;
+
               </div>
             </div>
 

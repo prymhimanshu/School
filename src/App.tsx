@@ -19,35 +19,60 @@ import SearchResults from './components/pages/SearchResults';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen">
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={
-              <>
-                <HeroSection />
-                <LoginSection />
-                <FeaturesSection />
-                <StatsSection />
-              </>
-            } />
-            <Route path="/about" element={<About />} />
-            <Route path="/neev" element={<Neev />} />
-            <Route path="/team" element={<TeamSection />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/apply-admission" element={<ApplyAdmission />} />
-            <Route path="/student-dashboard" element={<StudentDashboard />} />
-            <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-            <Route path="/notices" element={<Notices />} />
-            <Route path="/search" element={<SearchResults />} />
-            {/* Add more routes here as you create more pages */}
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <>
+      <Router>
+        <div className="min-h-screen">
+          <Header />
+          <main>
+            <Routes>
+              <Route path="/" element={
+                <>
+                  <HeroSection />
+                  <LoginSection />
+                  <FeaturesSection />
+                  <StatsSection />
+                </>
+              } />
+              <Route path="/about" element={<About />} />
+              <Route path="/neev" element={<Neev />} />
+              <Route path="/team" element={<TeamSection />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/apply-admission" element={<ApplyAdmission />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
+              <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+              <Route path="/notices" element={<Notices />} />
+              <Route path="/search" element={<SearchResults />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+    </>
   );
 }
 
