@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Bell, Calendar, User, AlertCircle } from 'lucide-react';
+import { ChevronDown, Bell, Calendar, User, CircleAlert as AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, fetchNotices, Notice } from '../../lib/supabase';
 import LoadingSpinner from '../ui/LoadingSpinner';
