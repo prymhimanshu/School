@@ -1,56 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { User, Lock, ChevronDown, LogIn, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-// Minimal fallback users in case fetch fails
-const FALLBACK_USERS = [
-  {
-    admissionId: 'himanshu123',
-    teacherId: 'himanshu123',
-    email: 'himanshu@gmail.com',
-    password: '123',
-    name: 'Himanshu',
-    roles: ['student', 'teacher', 'admin'],
-    dob: '2005-01-01',
-    bloodGroup: 'B+',
-    className: 'XII',
-    section: 'A',
-    profilePhoto: 'https://randomuser.me/api/portraits/men/75.jpg',
-  },
-];
-
-// Minimal fallback teachers
-const FALLBACK_TEACHERS = [
-  {
-    teacherId: 'teacher001',
-    password: 'abc',
-    name: 'Teacher One',
-    roles: ['teacher'],
-    email: 'teacher.one@school.edu',
-    profilePhoto: '/data/images/teacher_placeholder.jpg',
-    classes: ['IX'],
-    sections: ['A']
-  }
-];
+import { motion } from 'framer-motion';
+import { supabase, signInWithCredentials } from '../lib/supabase';
+import toast from 'react-hot-toast';
+import LoadingSpinner from './ui/LoadingSpinner';
 
 const LoginSection: React.FC = () => {
   const [admissionId, setAdmissionId] = useState('');
   const [teacherId, setTeacherId] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('123'); // Default password for demo
   const [role, setRole] = useState('student');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [users, setUsers] = useState<any[]>(FALLBACK_USERS);
-  const [teachers, setTeachers] = useState<any[]>(FALLBACK_TEACHERS);
-  const [loading, setLoading] = useState(true);
-  const [dataError, setDataError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [loggedUser, setLoggedUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // load logged user from localStorage
+    // Load logged user from localStorage
     try {
       const raw = localStorage.getItem('loggedUser');
       if (raw) setLoggedUser(JSON.parse(raw));
@@ -58,7 +26,7 @@ const LoginSection: React.FC = () => {
       // ignore
     }
 
-    // listen for global auth changes so this component stays in sync
+    // Listen for global auth changes
     const authHandler = (ev: Event) => {
       try {
         const ce = ev as CustomEvent;
@@ -70,37 +38,6 @@ const LoginSection: React.FC = () => {
     };
     window.addEventListener('authChanged', authHandler as EventListener);
 
-    // fetch users.json and teachers.json in parallel
-    (async () => {
-      try {
-        const [uRes, tRes] = await Promise.all([
-          fetch('/data/users.json'),
-          fetch('/data/teachers.json')
-        ]);
-
-        if (!uRes.ok) throw new Error(`/data/users.json HTTP ${uRes.status}`);
-        if (!tRes.ok) throw new Error(`/data/teachers.json HTTP ${tRes.status}`);
-
-        const [uList, tList] = await Promise.all([uRes.json(), tRes.json()]);
-
-        if (!Array.isArray(uList) || uList.length === 0) {
-          console.warn('User data is empty or invalid.');
-          setUsers(FALLBACK_USERS);
-        } else setUsers(uList);
-
-        if (!Array.isArray(tList) || tList.length === 0) {
-          console.warn('Teacher data is empty or invalid.');
-          setTeachers(FALLBACK_TEACHERS);
-        } else setTeachers(tList);
-      } catch (err) {
-        console.warn('Could not load user/teacher data, using fallback.', err);
-        setDataError('Could not load user/teacher data; using fallbacks.');
-        setUsers(FALLBACK_USERS);
-        setTeachers(FALLBACK_TEACHERS);
-      } finally {
-        setLoading(false);
-      }
-    })();
     return () => {
       window.removeEventListener('authChanged', authHandler as EventListener);
     };
@@ -112,74 +49,51 @@ const LoginSection: React.FC = () => {
     { value: 'admin', label: 'Administrator' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setLoading(true);
 
-  const normalize = (s: any) => (typeof s === 'string' ? s.trim().toLowerCase() : '');
-  const pass = String(password || '').trim();
-
-    let user: any = null;
-    if (role === 'student') {
-      user = users.find(u => normalize(u.admissionId) === normalize(admissionId) && String(u.password || '').trim() === pass);
-    } else if (role === 'teacher') {
-      // look up in teachers list specifically
-      user = teachers.find(t => (
-        (t.teacherId && normalize(t.teacherId) === normalize(teacherId)) ||
-        normalize(t.email) === normalize(teacherId) ||
-        normalize(t.teacherId) === normalize(teacherId)
-      ) && String(t.password || '').trim() === pass);
-      // fall back to users list if not found (in case teacher is stored there)
-      if (!user) {
-        user = users.find(u => (
-          (u.teacherId && normalize(u.teacherId) === normalize(teacherId)) ||
-          normalize(u.admissionId) === normalize(teacherId) ||
-          normalize(u.email) === normalize(teacherId)
-        ) && String(u.password || '').trim() === pass);
+    try {
+      let credentials: any = {};
+      
+      if (role === 'student') {
+        credentials.admission_id = admissionId;
+      } else if (role === 'teacher') {
+        credentials.teacher_id = teacherId;
+      } else if (role === 'admin') {
+        credentials.email = email;
       }
-    } else if (role === 'admin') {
-      user = users.find(u => normalize(u.email) === normalize(email) && String(u.password || '').trim() === pass);
-    }
 
-    if (!user) {
-      setError('Invalid credentials.');
-      return;
-    }
+      const { user, error } = await signInWithCredentials(credentials, password, role);
 
-    const userState = {
-      name: user.name,
-      dob: user.dob,
-      admissionId: user.admissionId,
-      teacherId: user.teacherId,
-      bloodGroup: user.bloodGroup,
-      className: user.className,
-      section: user.section,
-      profilePhoto: user.profilePhoto,
-      roles: user.roles || [],
-      loggedAs: role, // record which role was used to login
-    };
+      if (error || !user) {
+        toast.error('Invalid credentials. Please try again.');
+        return;
+      }
 
-    try {
+      const userState = {
+        ...user,
+        loggedAs: role,
+      };
+
       localStorage.setItem('loggedUser', JSON.stringify(userState));
-    } catch (e) {
-      // ignore
-    }
-
-    setLoggedUser(userState);
-    // notify other components
-    try {
+      setLoggedUser(userState);
+      
+      // Notify other components
       window.dispatchEvent(new CustomEvent('authChanged', { detail: userState }));
-    } catch (e) {
-      // ignore (older browsers)
-    }
-    setSuccess('Login successful!');
+      
+      toast.success('Login successful!');
 
-    // navigate to role-specific dashboard
-    if (role === 'teacher') {
-      navigate('/teacher-dashboard', { state: { user: userState } });
-    } else {
-      navigate('/student-dashboard', { state: { user: userState } });
+      // Navigate to role-specific dashboard
+      if (role === 'teacher') {
+        navigate('/teacher-dashboard', { state: { user: userState } });
+      } else {
+        navigate('/student-dashboard', { state: { user: userState } });
+      }
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -187,11 +101,8 @@ const LoginSection: React.FC = () => {
     if (e) e.stopPropagation();
     localStorage.removeItem('loggedUser');
     setLoggedUser(null);
-    try {
-      window.dispatchEvent(new CustomEvent('authChanged', { detail: null }));
-    } catch (e) {
-      // ignore
-    }
+    window.dispatchEvent(new CustomEvent('authChanged', { detail: null }));
+    toast.success('Logged out successfully');
     navigate('/');
   };
 
@@ -205,72 +116,82 @@ const LoginSection: React.FC = () => {
   };
 
   return (
-    <section className="bg-gray-50 py-8 lg:py-12">
+    <section className="bg-gradient-to-br from-blue-50 via-white to-yellow-50 py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           {loggedUser ? (
-            <div
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               onClick={goToDashboard}
               role="button"
               tabIndex={0}
-              className="bg-white rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-xl focus:outline-none"
+              className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 lg:p-8 border border-white/20 flex items-center gap-4 cursor-pointer hover:shadow-3xl transition-all duration-300 hover:scale-105"
             >
-              <img src={loggedUser.profilePhoto} alt="profile" className="w-16 h-18 object-cover rounded-md border-2 border-yellow-200" />
-              <div>
-                <div className="text-sm text-gray-600">Signed in as</div>
-                <div className="text-lg font-semibold text-gray-900">{loggedUser.name}</div>
-                <div className="text-sm text-gray-500">{loggedUser.loggedAs === 'teacher' ? `Teacher ID: ${loggedUser.teacherId}` : `Admission ID: ${loggedUser.admissionId}`}</div>
+              <div className="relative">
+                <img 
+                  src={loggedUser.profile_photo || '/assest/logo.png'} 
+                  alt="profile" 
+                  className="w-16 h-18 object-cover rounded-xl border-2 border-yellow-200 shadow-lg" 
+                />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
-              <div className="ml-auto">
-                <button
-                  onClick={handleLogout}
-                  title="Logout"
-                  aria-label="Logout"
-                  className="p-2 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+              <div className="flex-1">
+                <div className="text-sm text-gray-600 font-medium">Signed in as</div>
+                <div className="text-lg font-bold text-gray-900">{loggedUser.name}</div>
+                <div className="text-sm text-gray-500">
+                  {loggedUser.loggedAs === 'teacher' 
+                    ? `Teacher ID: ${loggedUser.teacher_id}` 
+                    : `Admission ID: ${loggedUser.admission_id}`
+                  }
+                </div>
               </div>
-            </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                aria-label="Logout"
+                className="p-3 rounded-full bg-red-50 hover:bg-red-100 text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 transition-colors duration-200"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </motion.div>
           ) : (
-            <div className="bg-white rounded-xl shadow-lg p-8 lg:p-8 border border-gray-100">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <LogIn className="w-6 h-6 text-gray-900" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-1">Login</h3>
-                <p className="text-gray-600 text-sm">Access your school account</p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 lg:p-10 border border-white/20"
+            >
+              <div className="text-center mb-8">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
+                >
+                  <LogIn className="w-8 h-8 text-white" />
+                </motion.div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h3>
+                <p className="text-gray-600">Access your school account</p>
               </div>
 
-              {loading && (
-                <div className="text-sm text-gray-500 text-center mb-3">Loading user & teacher data...</div>
-              )}
-              {dataError && (
-                <div className="text-sm text-red-600 text-center mb-3">{dataError}</div>
-              )}
-              {!loading && (
-                <div className="text-sm text-green-600 text-center mb-3">
-                  {role === 'teacher' ? `Loaded ${teachers.length} teacher(s)` : `Loaded ${users.length} user(s)`}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {error && <div className="text-red-600 text-sm text-center font-semibold">{error}</div>}
-                {success && <div className="text-green-600 text-sm text-center font-semibold">{success}</div>}
-
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Login as</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Login as</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 flex items-center justify-between text-sm hover:border-gray-400"
+                      className="w-full bg-white/50 border border-gray-300 rounded-xl px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 flex items-center justify-between hover:bg-white/70"
                     >
-                      <span className="capitalize">{roles.find(r => r.value === role)?.label}</span>
+                      <span className="capitalize font-medium">{roles.find(r => r.value === role)?.label}</span>
                       <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} />
                     </button>
                     {showRoleDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-xl shadow-lg z-10 overflow-hidden"
+                      >
                         {roles.map((roleOption) => (
                           <button
                             key={roleOption.value}
@@ -279,12 +200,12 @@ const LoginSection: React.FC = () => {
                               setRole(roleOption.value);
                               setShowRoleDropdown(false);
                             }}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-200 first:rounded-t-lg last:rounded-b-lg text-sm"
+                            className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-200 font-medium"
                           >
                             {roleOption.label}
                           </button>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 </div>
@@ -292,28 +213,28 @@ const LoginSection: React.FC = () => {
                 {role === 'student' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Admission ID</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Admission ID</label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="text"
                           value={admissionId}
                           onChange={e => setAdmissionId(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your Admission ID"
                           required
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="password"
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your password"
                           required
                         />
@@ -325,28 +246,28 @@ const LoginSection: React.FC = () => {
                 {role === 'teacher' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Teacher ID</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Teacher ID</label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="text"
                           value={teacherId}
                           onChange={e => setTeacherId(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your Teacher ID"
                           required
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="password"
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your password"
                           required
                         />
@@ -358,28 +279,28 @@ const LoginSection: React.FC = () => {
                 {role === 'admin' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="email"
                           value={email}
                           onChange={e => setEmail(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your email"
                           required
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="password"
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 text-sm hover:border-gray-400"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200 bg-white/50 hover:bg-white/70"
                           placeholder="Enter your password"
                           required
                         />
@@ -387,16 +308,31 @@ const LoginSection: React.FC = () => {
                     </div>
                   </>
                 )}
-                {/* Submit Button */}
-                <button
+
+                <motion.button
                   type="submit"
                   disabled={loading}
-                  className={`w-full ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'} text-white py-3 rounded-lg font-medium transition-all duration-300 transform ${loading ? '' : 'hover:scale-105'} text-sm shadow-lg`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700'} text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center justify-center space-x-2`}
                 >
-                  {loading ? 'Loading users...' : 'Sign In'}
-                </button>
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span>Signing In...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </motion.button>
               </form>
-            </div>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Demo credentials: Use any admission ID from the database with password "123"
+                </p>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>

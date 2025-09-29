@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import LoginSection from './components/LoginSection';
@@ -53,14 +54,22 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
             color: '#fff',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: '#4ade80',
+              primary: '#10b981',
               secondary: '#fff',
+            },
+            style: {
+              background: 'rgba(16, 185, 129, 0.95)',
+              color: '#fff',
             },
           },
           error: {
@@ -68,6 +77,10 @@ function App() {
             iconTheme: {
               primary: '#ef4444',
               secondary: '#fff',
+            },
+            style: {
+              background: 'rgba(239, 68, 68, 0.95)',
+              color: '#fff',
             },
           },
         }}
