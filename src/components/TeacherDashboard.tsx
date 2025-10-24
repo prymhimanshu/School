@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Trash2, BookOpen } from 'lucide-react';
+import { Trash2, BookOpen, ClipboardList, GraduationCap, Users, Calendar, Mail, Phone, Award, TrendingUp, CheckCircle, LogOut } from 'lucide-react';
 import MarksManagement from './MarksManagement';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TeacherData {
   name: string;
@@ -211,157 +212,360 @@ const TeacherDashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-white min-h-screen px-4 py-8">
-      <div className="max-w-4xl w-full bg-white rounded-xl shadow-2xl border overflow-hidden">
-        <div className="p-4 border-b bg-gray-50">
-          <div className="flex space-x-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Top Navigation Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-4 border border-white/20"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Teacher Portal</h1>
+                <p className="text-sm text-gray-600">Welcome back, {profile?.name || teacher.name}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('loggedUser');
+                navigate('/');
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-medium"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Tab Navigation */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-6 bg-white rounded-2xl shadow-xl p-2 border border-gray-100"
+        >
+          <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('homework')}
-              className={`px-4 py-2 rounded-lg ${
+              className={`flex-1 px-6 py-4 rounded-xl transition-all duration-200 ${
                 activeTab === 'homework'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transform scale-105'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <Trash2 size={20} />
-                <span>Homework</span>
+              <div className="flex items-center justify-center gap-3">
+                <ClipboardList className={`w-5 h-5 ${activeTab === 'homework' ? '' : 'opacity-60'}`} />
+                <span className="font-semibold">Homework</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('marks')}
-              className={`px-4 py-2 rounded-lg ${
+              className={`flex-1 px-6 py-4 rounded-xl transition-all duration-200 ${
                 activeTab === 'marks'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transform scale-105'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <BookOpen size={20} />
-                <span>Marks Management</span>
+              <div className="flex items-center justify-center gap-3">
+                <BookOpen className={`w-5 h-5 ${activeTab === 'marks' ? '' : 'opacity-60'}`} />
+                <span className="font-semibold">Marks Management</span>
               </div>
             </button>
           </div>
-        </div>
-        <div className="p-6 flex items-center gap-6">
-          <img src={profile?.profilePhoto || teacher.profilePhoto} alt="teacher" className="w-24 h-28 object-cover rounded-md border-2 border-sky-200" />
-          <div>
-            <h2 className="text-2xl font-bold text-sky-700">{profile?.name || teacher.name}</h2>
-            <div className="text-sm text-gray-600 mt-1">Teacher ID: <span className="font-semibold">{profile?.teacherId || teacher.teacherId}</span></div>
-            <div className="mt-2 text-sm text-gray-700">
-              <div>
-                <span className="text-gray-500">Classes:</span>{' '}
-                <span className="font-medium">{(profile?.classes && profile.classes.length > 0) ? profile.classes.join(', ') : (teacher?.classes ? teacher.classes.join(', ') : '—')}</span>
+        </motion.div>
+        {/* Profile Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl overflow-hidden"
+        >
+          <div className="p-8">
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-white/30 shadow-xl">
+                  <img
+                    src={profile?.profilePhoto || teacher.profilePhoto}
+                    alt="teacher"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/data/images/Default.jpg';
+                    }}
+                  />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center border-4 border-white shadow-lg">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="mt-1">
-                <span className="text-gray-500">Sections:</span>{' '}
-                <span className="font-medium">{(profile?.sections && profile.sections.length > 0) ? profile.sections.join(', ') : (teacher?.sections ? teacher.sections.join(', ') : '—')}</span>
-              </div>
-              <div className="mt-2">
-                <span className="text-gray-500">Subjects:</span>{' '}
-                <span className="font-medium">{(profile?.subjects && profile.subjects.length > 0) ? profile.subjects.join(', ') : '—'}</span>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div className="p-3 bg-sky-50 rounded-lg text-center">
-                <div className="text-xs text-gray-500">Classes</div>
-                <div className="text-lg font-bold text-gray-800">{profile?.classes ? profile.classes.length : '—'}</div>
-              </div>
-              <div className="p-3 bg-sky-50 rounded-lg text-center">
-                <div className="text-xs text-gray-500">Students</div>
-                <div className="text-lg font-bold text-gray-800">{studentsCount ?? '—'}</div>
-              </div>
-              <div className="p-3 bg-sky-50 rounded-lg text-center">
-                <div className="text-xs text-gray-500">Attendance</div>
-                <div className="text-lg font-bold text-green-600">95%</div>
+
+              <div className="flex-1 text-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">{profile?.name || teacher.name}</h2>
+                    <div className="flex items-center gap-2 text-blue-100">
+                      <Award className="w-4 h-4" />
+                      <span className="text-sm">Teacher ID: {profile?.teacherId || teacher.teacherId}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <GraduationCap className="w-5 h-5 text-blue-200" />
+                      <span className="text-sm text-blue-100">Classes</span>
+                    </div>
+                    <div className="text-2xl font-bold">
+                      {(profile?.classes && profile.classes.length > 0) ? profile.classes.join(', ') : (teacher?.classes ? teacher.classes.join(', ') : '—')}
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-5 h-5 text-blue-200" />
+                      <span className="text-sm text-blue-100">Sections</span>
+                    </div>
+                    <div className="text-2xl font-bold">
+                      {(profile?.sections && profile.sections.length > 0) ? profile.sections.join(', ') : (teacher?.sections ? teacher.sections.join(', ') : '—')}
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-5 h-5 text-blue-200" />
+                      <span className="text-sm text-blue-100">Subjects</span>
+                    </div>
+                    <div className="text-lg font-bold">
+                      {(profile?.subjects && profile.subjects.length > 0) ? profile.subjects.join(', ') : '—'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                    <div className="text-sm text-blue-100 mb-1">Total Classes</div>
+                    <div className="text-3xl font-bold">{profile?.classes ? profile.classes.length : '—'}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                    <div className="text-sm text-blue-100 mb-1">Total Students</div>
+                    <div className="text-3xl font-bold">{studentsCount ?? '—'}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                    <div className="text-sm text-blue-100 mb-1">Attendance</div>
+                    <div className="text-3xl font-bold text-green-300">95%</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {activeTab === 'homework' ? (
-          <div className="p-6 border-t bg-gray-50">
-            <h3 className="text-lg font-semibold mb-3">Assign Homework</h3>
-          <form onSubmit={handleAssign} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-            <div>
-              <label className="text-sm text-gray-600">Class</label>
-              {availableClasses ? (
-                <select value={className} onChange={e => setClassName(e.target.value)} className="w-full mt-1 p-2 border rounded">
-                  {availableClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              ) : (
-                <input value={className} onChange={e => setClassName(e.target.value)} className="w-full mt-1 p-2 border rounded" />
-              )}
+        </motion.div>
+        <AnimatePresence mode="wait">
+          {activeTab === 'homework' ? (
+          <motion.div
+            key="homework"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
+          >
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Assign Homework</h3>
+                  <p className="text-sm text-gray-600">Create and assign homework to your students</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-sm text-gray-600">Section</label>
-              {availableSections ? (
-                <select value={section} onChange={e => setSection(e.target.value)} className="w-full mt-1 p-2 border rounded">
-                  {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              ) : (
-                <input value={section} onChange={e => setSection(e.target.value)} className="w-full mt-1 p-2 border rounded" />
-              )}
+
+            <div className="p-8">
+          <form onSubmit={handleAssign} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    Class
+                  </div>
+                </label>
+                {availableClasses ? (
+                  <select value={className} onChange={e => setClassName(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    {availableClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                ) : (
+                  <input value={className} onChange={e => setClassName(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Section
+                  </div>
+                </label>
+                {availableSections ? (
+                  <select value={section} onChange={e => setSection(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                ) : (
+                  <input value={section} onChange={e => setSection(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Submission Date
+                  </div>
+                </label>
+                <input type="date" value={submissionDate} onChange={e => setSubmissionDate(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+              </div>
             </div>
+
             <div>
-              <label className="text-sm text-gray-600">Submission date</label>
-              <input type="date" value={submissionDate} onChange={e => setSubmissionDate(e.target.value)} className="w-full mt-1 p-2 border rounded" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" />
+                  Title
+                </div>
+              </label>
+              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter homework title" className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
             </div>
-            <div className="md:col-span-3">
-              <label className="text-sm text-gray-600">Title</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full mt-1 p-2 border rounded" />
-            </div>
+
             <div>
-              <label className="text-sm text-gray-600">Subject</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Subject
+                </div>
+              </label>
               {profile?.subjects ? (
-                <select value={subject} onChange={e => setSubject(e.target.value)} className="w-full mt-1 p-2 border rounded">
+                <select value={subject} onChange={e => setSubject(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                   {profile.subjects.map((s: string) => <option key={s} value={s}>{s}</option>)}
                 </select>
               ) : (
-                <input value={subject} onChange={e => setSubject(e.target.value)} className="w-full mt-1 p-2 border rounded" />
+                <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject" className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
               )}
             </div>
-            <div className="md:col-span-3">
-              <label className="text-sm text-gray-600">Description</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full mt-1 p-2 border rounded" />
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Enter homework description and instructions"
+                rows={4}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+              />
             </div>
-            <div className="md:col-span-3">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded">Assign Homework</button>
-              {message && <div className="text-sm text-green-600 mt-2">{message}</div>}
+
+            <div className="flex items-center justify-between pt-4">
+              <div className="flex-1">
+                {message && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-medium">{message}</span>
+                  </motion.div>
+                )}
+              </div>
+              <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" />
+                Assign Homework
+              </button>
             </div>
           </form>
 
           {homeworks.length > 0 && (
-            <div className="mt-6">
-              <h4 className="font-semibold">Recent Homeworks</h4>
-              <ul className="mt-2 space-y-2">
-                {homeworks.slice(0, 8).map(hw => (
-                  <li key={hw.id} className="p-3 bg-white border rounded flex justify-between items-start">
-                    <div>
-                      <div className="text-sm text-gray-500">Class {hw.className} • Section {hw.section} • Assigned by {teacherMap[hw.createdBy] || hw.createdBy}</div>
-                      <div className="font-semibold">{hw.title}</div>
-                      <div className="text-sm text-gray-700">{hw.description}</div>
-                      {(hw.submissionDate || hw.dueDate) && <div className="text-xs text-gray-500">Submission: {hw.submissionDate || hw.dueDate}</div>}
-                    </div>
-                    <div>
-                      <button onClick={() => handleDelete(hw.id)} title="Delete" className="p-1 rounded hover:bg-red-50">
-                        <Trash2 className="w-5 h-5 text-red-600" />
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardList className="w-5 h-5 text-gray-700" />
+                <h4 className="text-lg font-bold text-gray-900">Recent Homework Assignments</h4>
+                <span className="ml-auto text-sm text-gray-500">{homeworks.length} total</span>
+              </div>
+              <div className="space-y-3">
+                {homeworks.slice(0, 8).map((hw, index) => (
+                  <motion.div
+                    key={hw.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-gradient-to-r from-gray-50 to-white p-5 border-2 border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold">
+                            Class {hw.className}
+                          </div>
+                          <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-semibold">
+                            Section {hw.section}
+                          </div>
+                          {hw.subject && (
+                            <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">
+                              {hw.subject}
+                            </div>
+                          )}
+                        </div>
+                        <h5 className="font-bold text-gray-900 text-lg mb-1">{hw.title}</h5>
+                        {hw.description && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{hw.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            <span>By {teacherMap[hw.createdBy] || hw.createdBy}</span>
+                          </div>
+                          {(hw.submissionDate || hw.dueDate) && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>Due: {hw.submissionDate || hw.dueDate}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(hw.id)}
+                        title="Delete"
+                        className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all flex-shrink-0"
+                      >
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
-                  </li>
+                  </motion.div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
-        </div>
+            </div>
+          </motion.div>
         ) : (
-          <div className="p-6 border-t bg-gray-50">
+          <motion.div
+            key="marks"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
             <MarksManagement
               userRole="teacher"
               userId={profile?.teacherId || teacher?.teacherId || ''}
               teacherId={profile?.teacherId || teacher?.teacherId}
             />
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
     </div>
   );
